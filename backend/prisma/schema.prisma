@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    ServiceOrder[]
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  stock       Int      @default(0)
+  
+  // Custos e Precificação
+  costPrice   Float    @default(0)
+  freight     Float    @default(0)
+  otherCosts  Float    @default(0)
+  profitMargin Float   @default(0) // Em porcentagem
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orderItems  ServiceOrderItem[]
+}
+
+model Service {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float    // Preço base ou por hora
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orderItems  ServiceOrderItem[]
+}
+
+model ServiceOrder {
+  id              Int      @id @default(autoincrement())
+  clientId        Int
+  client          Client   @relation(fields: [clientId], references: [id])
+  status          String   @default("OPEN") // OPEN, COMPLETED, CANCELLED
+  startDate       DateTime @default(now())
+  endDate         DateTime?
+  description     String?
+  
+  // Faturamento
+  paymentMethod   String?  // PIX, CASH, CARD, etc
+  paymentType     String?  // CASH (Vista), INSTALLMENT (Prazo)
+  
+  // Custos adicionais
+  displacementCost Float    @default(0)
+  
+  items           ServiceOrderItem[]
+  transactions    FinancialTransaction[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ServiceOrderItem {
+  id             Int      @id @default(autoincrement())
+  serviceOrderId Int
+  serviceOrder   ServiceOrder @relation(fields: [serviceOrderId], references: [id])
+  
+  // Pode ser produto ou serviço
+  productId      Int?
+  product        Product? @relation(fields: [productId], references: [id])
+  
+  serviceId      Int?
+  service        Service? @relation(fields: [serviceId], references: [id])
+  
+  quantity       Float    @default(1)
+  unitPrice      Float    // Preço no momento da adição
+  totalPrice     Float
+  
+  isFirstHour    Boolean  @default(false) // Flag para marcar se é a primeira hora (preço diferenciado)
+}
+
+model FinancialTransaction {
+  id             Int      @id @default(autoincrement())
+  description    String
+  amount         Float
+  type           String   // INCOME, EXPENSE
+  date           DateTime @default(now())
+  
+  // Controle de Pagamento
+  status         String   @default("PAID") // PENDING, PAID
+  dueDate        DateTime?
+  paidAt         DateTime?
+  
+  serviceOrderId Int?
+  serviceOrder   ServiceOrder? @relation(fields: [serviceOrderId], references: [id])
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
