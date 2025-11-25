@@ -30,7 +30,7 @@ const Layout = ({ children }) => {
             <aside className="w-64 bg-gray-900 text-white flex flex-col">
                 <div className="p-6 border-b border-gray-800">
                     <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                        TechManager
+                        BernyFlow
                     </h1>
                     <p className="text-xs text-gray-500 mt-1">Gestão de Informática</p>
                 </div>
@@ -45,7 +45,7 @@ const Layout = ({ children }) => {
                 </nav>
 
                 <div className="p-4 border-t border-gray-800 text-center text-xs text-gray-500">
-                    &copy; 2024 TechManager
+                    &copy; 2024 BernyFlow
                 </div>
             </aside>
 
