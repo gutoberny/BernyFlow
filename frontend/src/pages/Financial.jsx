@@ -11,9 +11,14 @@ const Financial = () => {
     const [summary, setSummary] = useState({ income: 0, expense: 0, pendingIncome: 0, pendingExpense: 0, balance: 0 });
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('ALL'); // ALL, PAYABLE, RECEIVABLE, PAID
-    const [dateFilter, setDateFilter] = useState({
-        startDate: '',
-        endDate: ''
+    const [dateFilter, setDateFilter] = useState(() => {
+        const date = new Date();
+        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        return {
+            startDate: firstDay.toISOString().split('T')[0],
+            endDate: lastDay.toISOString().split('T')[0]
+        };
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState(null);
@@ -287,10 +292,10 @@ const Financial = () => {
                                 transactions.map(transaction => (
                                     <tr key={transaction.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 text-gray-600">
-                                            {new Date(transaction.date).toLocaleDateString()}
+                                            {new Date(transaction.date).toLocaleDateString('pt-BR')}
                                         </td>
                                         <td className="px-6 py-4 text-gray-600">
-                                            {transaction.dueDate ? new Date(transaction.dueDate).toLocaleDateString() : '-'}
+                                            {transaction.dueDate ? new Date(transaction.dueDate).toLocaleDateString('pt-BR') : '-'}
                                         </td>
                                         <td className="px-6 py-4 font-medium text-gray-900">
                                             {transaction.description}

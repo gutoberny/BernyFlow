@@ -23,12 +23,12 @@ const Dashboard = () => {
     });
 
     const [dateFilter, setDateFilter] = useState(() => {
-        const end = new Date();
-        const start = new Date();
-        start.setDate(start.getDate() - 30);
+        const date = new Date();
+        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
         return {
-            startDate: start.toISOString().split('T')[0],
-            endDate: end.toISOString().split('T')[0]
+            startDate: firstDay.toISOString().split('T')[0],
+            endDate: lastDay.toISOString().split('T')[0]
         };
     });
 
