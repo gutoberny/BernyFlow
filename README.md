@@ -1,86 +1,111 @@
-# BernyFlow - Sistema de Gestão para Assistência Técnica
+# BernyFlow 🚀
 
-Sistema web para gerenciamento de clientes, produtos, serviços, ordens de serviço e financeiro, desenvolvido para empresas de informática.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Status](https://img.shields.io/badge/status-active-success.svg)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
 
-## Tecnologias Utilizadas
+**BernyFlow** é um sistema de gestão completo e open-source projetado para assistências técnicas e prestadores de serviços de TI. Ele simplifica o controle de ordens de serviço, clientes, estoque e finanças em uma interface moderna e intuitiva.
 
-- **Frontend**: React, Vite, Tailwind CSS, Lucide React
-- **Backend**: Node.js, Express
-- **Banco de Dados**: SQLite, Prisma ORM
+---
 
-## Pré-requisitos
+## ✨ Funcionalidades Principais
 
-- Node.js (versão 18 ou superior)
-- NPM (gerenciador de pacotes do Node)
+### 🛠️ Gestão de Ordens de Serviço (OS)
+- **Ciclo de Vida Completo**: Abertura, execução, finalização e reabertura de OS.
+- **Controle de Custos**: Adição de produtos (com baixa automática de estoque) e serviços.
+- **Cálculo Inteligente**: Diferenciação de preço para a 1ª hora técnica e custos de deslocamento.
+- **Reabertura Segura**: Lógica automática para estorno de transações financeiras ao reabrir uma OS.
 
-### Usando Docker (Recomendado)
+### 💰 Controle Financeiro Avançado
+- **Contas a Pagar e Receber**: Gestão completa do fluxo de caixa.
+- **Transações Recorrentes**: Criação automática de parcelas ou mensalidades (ex: contratos de manutenção).
+- **Filtros Poderosos**: Visualize por status (Pago/Pendente), tipo (Receita/Despesa) e período personalizado.
+- **Dashboard Financeiro**: Resumo claro de receitas, despesas e saldo em tempo real.
 
-1. Certifique-se de ter o Docker e Docker Compose instalados.
+### 📦 Gestão de Produtos e Serviços
+- **Precificação Automática**: Cálculo de preço de venda baseado em custos (frete, impostos) e margem de lucro desejada.
+- **Controle de Estoque**: Atualização automática conforme o uso em ordens de serviço.
 
-2. Na raiz do projeto, execute:
+### 👥 Gestão de Clientes
+- Cadastro completo com histórico de serviços prestados.
+- Integração direta com a abertura de novas OS.
+
+---
+
+## 🚀 Tecnologias Utilizadas
+
+O projeto foi construído com uma stack moderna focada em performance e experiência do desenvolvedor:
+
+- **Frontend**: [React](https://reactjs.org/) + [Vite](https://vitejs.dev/)
+- **Estilização**: [Tailwind CSS](https://tailwindcss.com/) + [Lucide React](https://lucide.dev/) (Ícones)
+- **Backend**: [Node.js](https://nodejs.org/) + [Express](https://expressjs.com/)
+- **Banco de Dados**: [SQLite](https://www.sqlite.org/) (Fácil setup) + [Prisma ORM](https://www.prisma.io/)
+- **Containerização**: [Docker](https://www.docker.com/) + Docker Compose
+
+---
+
+## 🏁 Como Executar o Projeto
+
+### Pré-requisitos
+- Git
+- Docker e Docker Compose (Recomendado)
+- Node.js v18+ (para execução manual)
+
+### Opção 1: Rodando com Docker (Recomendado) 🐳
+
+A maneira mais rápida de testar o BernyFlow:
+
+1. **Clone o repositório**
+   ```bash
+   git clone https://github.com/SEU_USUARIO/BernyFlow.git
+   cd BernyFlow
+   ```
+
+2. **Suba os containers**
    ```bash
    docker compose up --build
    ```
 
-3. Acesse a aplicação:
+3. **Acesse a aplicação**
    - Frontend: `http://localhost:5173`
    - Backend API: `http://localhost:3000`
 
-### Instalação Manual (Sem Docker)
+### Opção 2: Instalação Manual 🛠️
 
-### 1. Backend (API)
+#### Backend
+```bash
+cd backend
+npm install
+npx prisma generate
+npx prisma migrate dev
+npm run dev
+```
 
-1. Navegue até a pasta do backend:
-   ```bash
-   cd backend
-   ```
+#### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
+---
 
-3. Configure o banco de dados e execute as migrações:
-   ```bash
-   npx prisma generate
-   npx prisma migrate dev
-   ```
+## 🤝 Como Contribuir
 
-4. Inicie o servidor:
-   ```bash
-   npm run dev
-   ```
-   O servidor rodará em `http://localhost:3000`.
+Contribuições são o que fazem a comunidade open-source um lugar incrível para aprender, inspirar e criar. Qualquer contribuição que você fizer será **muito apreciada**.
 
-### 2. Frontend (Interface)
+1. Faça um Fork do projeto
+2. Crie uma Branch para sua Feature (`git checkout -b feature/MinhaFeature`)
+3. Faça o Commit de suas mudanças (`git commit -m 'Adicionando uma nova feature incrível'`)
+4. Faça o Push para a Branch (`git push origin feature/MinhaFeature`)
+5. Abra um Pull Request
 
-1. Abra um novo terminal e navegue até a pasta do frontend:
-   ```bash
-   cd frontend
-   ```
+---
 
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
+## 📄 Licença
 
-3. Inicie o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
-   Acesse a aplicação em `http://localhost:5173`.
+Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
 
-## Funcionalidades Principais
+---
 
-- **Dashboard**: Visão geral rápida.
-- **Clientes**: Cadastro completo (CRUD).
-- **Produtos**: Controle de estoque e preços.
-- **Serviços**: Tabela de preços de serviços.
-- **Ordens de Serviço**:
-  - Abertura e acompanhamento de status.
-  - Adição de produtos (baixa automática no estoque).
-  - Adição de serviços (cálculo de 1ª hora diferenciada).
-  - Custo de deslocamento.
-- **Financeiro**:
-  - Registro automático de receitas ao finalizar OS.
-  - Resumo de receitas, despesas e saldo.
+Desenvolvido com ❤️ por **BernyFlow Team**.
