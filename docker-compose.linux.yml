@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  postgres:
+    # Use host networking to bypass iptables issues
+    network_mode: host
+    # Override command to listen on port 5433 to avoid conflict with local Postgres
+    command: -p 5433
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: vberny
+
+  backend:
+    network_mode: host
+    environment:
+      # Connect to localhost:5433
+      - DATABASE_URL=postgresql://postgres:postgrespassword@localhost:5433/vberny?schema=public
+      - PORT=3000
+      - MP_ACCESS_TOKEN=${MP_ACCESS_TOKEN}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+
+  frontend:
+    network_mode: host
+    environment:
+      - VITE_API_URL=http://localhost:3000

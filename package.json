@@ -1,0 +1,13 @@
+{
+    "name": "bernyflow-root",
+    "version": "1.0.0",
+    "description": "Root scripts for BernyFlow",
+    "scripts": {
+        "docker:win": "docker compose up -d --build",
+        "docker:linux": "docker compose -f docker-compose.yml -f docker-compose.linux.yml up --build",
+        "docker:down": "docker compose down"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+}

@@ -21,6 +21,9 @@ services:
       # Use service name 'postgres' instead of localhost
       - DATABASE_URL=postgresql://postgres:postgrespassword@postgres:5432/vberny?schema=public
       - PORT=3000
+      - MP_ACCESS_TOKEN=${MP_ACCESS_TOKEN}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - WEBHOOK_URL=${WEBHOOK_URL}
     depends_on:
       - postgres
     ports:

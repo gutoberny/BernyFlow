@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,9 +21,25 @@ const CompanySettings = () => {
         email: ''
     });
 
+    const location = useLocation();
+
     useEffect(() => {
         fetchCompanyData();
-    }, []);
+
+        // Check for payment status
+        const params = new URLSearchParams(location.search);
+        const status = params.get('status');
+
+        if (status === 'success') {
+            success('Pagamento aprovado! Seu plano foi atualizado para PRO.');
+            // Remove query param to avoid showing message again on refresh
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (status === 'failure') {
+            error('O pagamento falhou. Tente novamente.');
+        } else if (status === 'pending') {
+            success('Pagamento em processamento. Assim que aprovado, seu plano será atualizado.');
+        }
+    }, [location]);
 
     const fetchCompanyData = async () => {
         try {

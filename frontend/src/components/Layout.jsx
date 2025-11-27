@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-    LayoutDashboard, 
-    Users, 
-    Package, 
-    Wrench, 
-    FileText, 
-    DollarSign, 
-    LogOut, 
+import {
+    LayoutDashboard,
+    Users,
+    Package,
+    Wrench,
+    FileText,
+    DollarSign,
+    LogOut,
     Settings,
     User,
     ChevronUp,
@@ -57,16 +57,16 @@ const UserMenu = () => {
         <div className="relative" ref={menuRef}>
             {isOpen && (
                 <div className="absolute bottom-full left-0 w-full mb-2 bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden">
-                    <Link 
-                        to="/settings/profile" 
+                    <Link
+                        to="/settings/profile"
                         className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                         onClick={() => setIsOpen(false)}
                     >
                         <User size={18} />
                         <span className="text-sm">Meu Perfil</span>
                     </Link>
-                    <Link 
-                        to="/settings/company" 
+                    <Link
+                        to="/settings/company"
                         className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                         onClick={() => setIsOpen(false)}
                     >
@@ -74,7 +74,7 @@ const UserMenu = () => {
                         <span className="text-sm">Empresa</span>
                     </Link>
                     <div className="h-px bg-gray-700 my-1"></div>
-                    <button 
+                    <button
                         onClick={logout}
                         className="flex items-center gap-3 px-4 py-3 w-full text-red-400 hover:bg-red-900/30 transition-colors"
                     >
@@ -125,7 +125,10 @@ const Layout = ({ children }) => {
                     <SidebarItem icon={Users} label="Equipe" to="/team" />
                 </nav>
 
-                <div className="p-4 border-t border-gray-800">
+                <div className="p-4 border-t border-gray-800 space-y-4">
+                    <Link to="/upgrade" className="block w-full py-2 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-center rounded-lg font-bold text-sm hover:opacity-90 transition-opacity">
+                        Upgrade to Pro 🚀
+                    </Link>
                     <UserMenu />
                     <div className="mt-4 text-center text-xs text-gray-500">
                         &copy; 2024 BernyFlow

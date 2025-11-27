@@ -49,11 +49,19 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+const { checkLimit } = require('../utils/planLimits');
+
 // Criar OS
 router.post('/', async (req, res) => {
     try {
+        // Check Plan Limits
+        const limitCheck = await checkLimit(req.user.companyId, 'orders');
+        if (!limitCheck.allowed) {
+            return res.status(403).json({ error: limitCheck.message });
+        }
+
         const { clientId, description, displacementCost } = req.body;
-        
+
         // Verify Client ownership
         const client = await prisma.client.findFirst({
             where: { id: Number(clientId), companyId: req.user.companyId }
@@ -198,7 +206,7 @@ router.post('/:id/items', async (req, res) => {
             const product = await prisma.product.findFirst({
                 where: { id: Number(productId), companyId: req.user.companyId }
             });
-            
+
             if (product) {
                 await prisma.product.update({
                     where: { id: Number(productId) },
@@ -218,9 +226,9 @@ router.post('/:id/items', async (req, res) => {
 router.delete('/items/:itemId', async (req, res) => {
     try {
         const { itemId } = req.params;
-        
+
         // Find item and verify order ownership via nested query
-        const item = await prisma.serviceOrderItem.findUnique({ 
+        const item = await prisma.serviceOrderItem.findUnique({
             where: { id: Number(itemId) },
             include: { serviceOrder: true }
         });

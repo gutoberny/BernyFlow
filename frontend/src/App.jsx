@@ -15,6 +15,7 @@ import Financial from './pages/Financial';
 import CompanySettings from './pages/CompanySettings';
 import UserProfile from './pages/UserProfile';
 import Team from './pages/Team';
+import UpgradePage from './pages/UpgradePage';
 
 import { ToastProvider } from './contexts/ToastContext';
 import { ConfirmProvider } from './contexts/ConfirmContext';
@@ -22,9 +23,9 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  
+
   if (loading) return <div>Carregando...</div>;
-  
+
   return user ? children : <Navigate to="/login" />;
 };
 
@@ -37,7 +38,7 @@ function App() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
-              
+
               <Route path="/" element={
                 <PrivateRoute>
                   <Layout>
@@ -105,6 +106,13 @@ function App() {
                 <PrivateRoute>
                   <Layout>
                     <Team />
+                  </Layout>
+                </PrivateRoute>
+              } />
+              <Route path="/upgrade" element={
+                <PrivateRoute>
+                  <Layout>
+                    <UpgradePage />
                   </Layout>
                 </PrivateRoute>
               } />

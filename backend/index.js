@@ -37,6 +37,9 @@ app.use('/api/financial', authMiddleware, financialRouter);
 app.use('/api/company', authMiddleware, companyRouter);
 app.use('/api/team', authMiddleware, teamRouter);
 
+const subscriptionRouter = require('./routes/subscription');
+app.use('/api/subscription', subscriptionRouter);
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

@@ -29,9 +29,17 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 });
 
+const { checkLimit } = require('../utils/planLimits');
+
 // Invite a new user
 router.post('/invite', authMiddleware, checkRole(['OWNER', 'ADMIN']), async (req, res) => {
     try {
+        // Check Plan Limits
+        const limitCheck = await checkLimit(req.user.companyId, 'users');
+        if (!limitCheck.allowed) {
+            return res.status(403).json({ error: limitCheck.message });
+        }
+
         const { name, email, role } = req.body;
 
         // Check if user already exists

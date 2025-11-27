@@ -17,15 +17,23 @@ router.get('/', async (req, res) => {
     }
 });
 
+const { checkLimit } = require('../utils/planLimits');
+
 // Criar novo cliente
 router.post('/', async (req, res) => {
     try {
+        // Check Plan Limits
+        const limitCheck = await checkLimit(req.user.companyId, 'clients');
+        if (!limitCheck.allowed) {
+            return res.status(403).json({ error: limitCheck.message });
+        }
+
         const { name, email, phone, address } = req.body;
         const client = await prisma.client.create({
-            data: { 
-                name, 
-                email, 
-                phone, 
+            data: {
+                name,
+                email,
+                phone,
                 address,
                 companyId: req.user.companyId
             }
@@ -41,7 +49,7 @@ router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { name, email, phone, address } = req.body;
-        
+
         // Verify ownership
         const existing = await prisma.client.findFirst({
             where: { id: Number(id), companyId: req.user.companyId }
