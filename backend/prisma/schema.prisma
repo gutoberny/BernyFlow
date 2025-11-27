@@ -11,15 +11,78 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Plan {
+  FREE
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  PAST_DUE
+}
+
+model Company {
+  id        Int      @id @default(autoincrement())
+  name      String
+  cnpj      String?
+  address   String?
+  phone     String?
+  email     String?
+  
+  plan              Plan               @default(FREE)
+  subscriptionStatus SubscriptionStatus @default(ACTIVE) @map("subscription_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  users     User[]
+  clients   Client[]
+  products  Product[]
+  services  Service[]
+  orders    ServiceOrder[]
+  transactions FinancialTransaction[]
+
+  @@map("company")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  USER
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+  
+  companyId Int      @map("company_id")
+  company   Company  @relation(fields: [companyId], references: [id])
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("user")
+}
+
 model Client {
   id        Int      @id @default(autoincrement())
   name      String
   email     String?
   phone     String?
   address   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  
+  companyId Int      @map("company_id")
+  company   Company  @relation(fields: [companyId], references: [id])
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   orders    ServiceOrder[]
+
+  @@map("client")
 }
 
 model Product {
@@ -30,14 +93,19 @@ model Product {
   stock       Int      @default(0)
   
   // Custos e Precificação
-  costPrice   Float    @default(0)
+  costPrice   Float    @default(0) @map("cost_price")
   freight     Float    @default(0)
-  otherCosts  Float    @default(0)
-  profitMargin Float   @default(0) // Em porcentagem
+  otherCosts  Float    @default(0) @map("other_costs")
+  profitMargin Float   @default(0) @map("profit_margin") // Em porcentagem
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  companyId   Int      @map("company_id")
+  company     Company  @relation(fields: [companyId], references: [id])
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
   orderItems  ServiceOrderItem[]
+
+  @@map("product")
 }
 
 model Service {
@@ -45,51 +113,64 @@ model Service {
   name        String
   description String?
   price       Float    // Preço base ou por hora
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  
+  companyId   Int      @map("company_id")
+  company     Company  @relation(fields: [companyId], references: [id])
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
   orderItems  ServiceOrderItem[]
+
+  @@map("service")
 }
 
 model ServiceOrder {
   id              Int      @id @default(autoincrement())
-  clientId        Int
+  clientId        Int      @map("client_id")
   client          Client   @relation(fields: [clientId], references: [id])
   status          String   @default("OPEN") // OPEN, COMPLETED, CANCELLED
-  startDate       DateTime @default(now())
-  endDate         DateTime?
+  startDate       DateTime @default(now()) @map("start_date")
+  endDate         DateTime? @map("end_date")
   description     String?
   
   // Faturamento
-  paymentMethod   String?  // PIX, CASH, CARD, etc
-  paymentType     String?  // CASH (Vista), INSTALLMENT (Prazo)
+  paymentMethod   String?  @map("payment_method") // PIX, CASH, CARD, etc
+  paymentType     String?  @map("payment_type") // CASH (Vista), INSTALLMENT (Prazo)
   
   // Custos adicionais
-  displacementCost Float    @default(0)
+  displacementCost Float    @default(0) @map("displacement_cost")
+  
+  companyId       Int      @map("company_id")
+  company         Company  @relation(fields: [companyId], references: [id])
   
   items           ServiceOrderItem[]
   transactions    FinancialTransaction[]
   
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("service_order")
 }
 
 model ServiceOrderItem {
   id             Int      @id @default(autoincrement())
-  serviceOrderId Int
+  serviceOrderId Int      @map("service_order_id")
   serviceOrder   ServiceOrder @relation(fields: [serviceOrderId], references: [id])
   
   // Pode ser produto ou serviço
-  productId      Int?
+  productId      Int?     @map("product_id")
   product        Product? @relation(fields: [productId], references: [id])
   
-  serviceId      Int?
+  serviceId      Int?     @map("service_id")
   service        Service? @relation(fields: [serviceId], references: [id])
   
   quantity       Float    @default(1)
-  unitPrice      Float    // Preço no momento da adição
-  totalPrice     Float
+  unitPrice      Float    @map("unit_price") // Preço no momento da adição
+  totalPrice     Float    @map("total_price")
   
-  isFirstHour    Boolean  @default(false) // Flag para marcar se é a primeira hora (preço diferenciado)
+  isFirstHour    Boolean  @default(false) @map("is_first_hour") // Flag para marcar se é a primeira hora (preço diferenciado)
+
+  @@map("service_order_item")
 }
 
 model FinancialTransaction {
@@ -101,12 +182,17 @@ model FinancialTransaction {
   
   // Controle de Pagamento
   status         String   @default("PAID") // PENDING, PAID
-  dueDate        DateTime?
-  paidAt         DateTime?
+  dueDate        DateTime? @map("due_date")
+  paidAt         DateTime? @map("paid_at")
   
-  serviceOrderId Int?
+  serviceOrderId Int?     @map("service_order_id")
   serviceOrder   ServiceOrder? @relation(fields: [serviceOrderId], references: [id])
   
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  companyId      Int      @map("company_id")
+  company        Company  @relation(fields: [companyId], references: [id])
+  
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("financial_transaction")
 }

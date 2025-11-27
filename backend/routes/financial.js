@@ -1,13 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
+const checkRole = require('../middleware/roleMiddleware');
 const prisma = new PrismaClient();
+
+// Protect all financial routes
+router.use(checkRole(['OWNER', 'ADMIN']));
 
 // Listar transações
 router.get('/', async (req, res) => {
     try {
         const { type, status, startDate, endDate } = req.query;
-        const where = {};
+        const where = { companyId: req.user.companyId };
 
         if (type) where.type = type;
         if (status) where.status = status;
@@ -59,7 +63,8 @@ router.post('/', async (req, res) => {
                     status,
                     date: currentDate,
                     dueDate: currentDueDate,
-                    paidAt: status === 'PAID' ? new Date() : null
+                    paidAt: status === 'PAID' ? new Date() : null,
+                    companyId: req.user.companyId
                 });
             }
 
@@ -78,7 +83,8 @@ router.post('/', async (req, res) => {
                     status,
                     date: date ? new Date(date) : new Date(),
                     dueDate: dueDate ? new Date(dueDate) : null,
-                    paidAt: status === 'PAID' ? new Date() : null
+                    paidAt: status === 'PAID' ? new Date() : null,
+                    companyId: req.user.companyId
                 }
             });
             res.status(201).json(transaction);
@@ -95,8 +101,8 @@ router.put('/:id', async (req, res) => {
         const { id } = req.params;
         const { description, amount, type, status, dueDate, date } = req.body;
 
-        const transaction = await prisma.financialTransaction.findUnique({
-            where: { id: Number(id) }
+        const transaction = await prisma.financialTransaction.findFirst({
+            where: { id: Number(id), companyId: req.user.companyId }
         });
 
         if (!transaction) {
@@ -149,8 +155,8 @@ router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
-        const transaction = await prisma.financialTransaction.findUnique({
-            where: { id: Number(id) }
+        const transaction = await prisma.financialTransaction.findFirst({
+            where: { id: Number(id), companyId: req.user.companyId }
         });
 
         if (!transaction) {
@@ -175,22 +181,22 @@ router.delete('/:id', async (req, res) => {
 router.get('/summary', async (req, res) => {
     try {
         const income = await prisma.financialTransaction.aggregate({
-            where: { type: 'INCOME', status: 'PAID' },
+            where: { type: 'INCOME', status: 'PAID', companyId: req.user.companyId },
             _sum: { amount: true }
         });
 
         const expense = await prisma.financialTransaction.aggregate({
-            where: { type: 'EXPENSE', status: 'PAID' },
+            where: { type: 'EXPENSE', status: 'PAID', companyId: req.user.companyId },
             _sum: { amount: true }
         });
 
         const pendingIncome = await prisma.financialTransaction.aggregate({
-            where: { type: 'INCOME', status: 'PENDING' },
+            where: { type: 'INCOME', status: 'PENDING', companyId: req.user.companyId },
             _sum: { amount: true }
         });
 
         const pendingExpense = await prisma.financialTransaction.aggregate({
-            where: { type: 'EXPENSE', status: 'PENDING' },
+            where: { type: 'EXPENSE', status: 'PENDING', companyId: req.user.companyId },
             _sum: { amount: true }
         });
 

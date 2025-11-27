@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 router.get('/', async (req, res) => {
     try {
         const services = await prisma.service.findMany({
+            where: { companyId: req.user.companyId },
             orderBy: { name: 'asc' }
         });
         res.json(services);
@@ -23,7 +24,8 @@ router.post('/', async (req, res) => {
             data: {
                 name,
                 description,
-                price: Number(price)
+                price: Number(price),
+                companyId: req.user.companyId
             }
         });
         res.status(201).json(service);
@@ -37,6 +39,14 @@ router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { name, description, price } = req.body;
+
+        // Verify ownership
+        const existing = await prisma.service.findFirst({
+            where: { id: Number(id), companyId: req.user.companyId }
+        });
+
+        if (!existing) return res.status(404).json({ error: 'Serviço não encontrado' });
+
         const service = await prisma.service.update({
             where: { id: Number(id) },
             data: {
@@ -55,6 +65,14 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
+
+        // Verify ownership
+        const existing = await prisma.service.findFirst({
+            where: { id: Number(id), companyId: req.user.companyId }
+        });
+
+        if (!existing) return res.status(404).json({ error: 'Serviço não encontrado' });
+
         await prisma.service.delete({
             where: { id: Number(id) }
         });

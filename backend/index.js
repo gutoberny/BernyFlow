@@ -16,17 +16,26 @@ app.get('/api/health', (req, res) => {
 });
 
 // Rotas
+const authRouter = require('./routes/auth');
 const clientsRouter = require('./routes/clients');
 const productsRouter = require('./routes/products');
 const servicesRouter = require('./routes/services');
 const serviceOrdersRouter = require('./routes/serviceOrders');
 const financialRouter = require('./routes/financial');
+const companyRouter = require('./routes/company');
+const teamRouter = require('./routes/team');
+const authMiddleware = require('./middleware/authMiddleware');
 
-app.use('/api/clients', clientsRouter);
-app.use('/api/products', productsRouter);
-app.use('/api/services', servicesRouter);
-app.use('/api/service-orders', serviceOrdersRouter);
-app.use('/api/financial', financialRouter);
+app.use('/api/auth', authRouter);
+
+// Protected Routes
+app.use('/api/clients', authMiddleware, clientsRouter);
+app.use('/api/products', authMiddleware, productsRouter);
+app.use('/api/services', authMiddleware, servicesRouter);
+app.use('/api/service-orders', authMiddleware, serviceOrdersRouter);
+app.use('/api/financial', authMiddleware, financialRouter);
+app.use('/api/company', authMiddleware, companyRouter);
+app.use('/api/team', authMiddleware, teamRouter);
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

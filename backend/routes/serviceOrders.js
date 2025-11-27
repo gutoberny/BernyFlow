@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 router.get('/', async (req, res) => {
     try {
         const orders = await prisma.serviceOrder.findMany({
+            where: { companyId: req.user.companyId },
             include: {
                 client: true,
                 items: {
@@ -28,8 +29,8 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const order = await prisma.serviceOrder.findUnique({
-            where: { id: Number(id) },
+        const order = await prisma.serviceOrder.findFirst({
+            where: { id: Number(id), companyId: req.user.companyId },
             include: {
                 client: true,
                 items: {
@@ -52,12 +53,20 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const { clientId, description, displacementCost } = req.body;
+        
+        // Verify Client ownership
+        const client = await prisma.client.findFirst({
+            where: { id: Number(clientId), companyId: req.user.companyId }
+        });
+        if (!client) return res.status(400).json({ error: 'Cliente inválido' });
+
         const order = await prisma.serviceOrder.create({
             data: {
                 clientId: Number(clientId),
                 description,
                 displacementCost: Number(displacementCost || 0),
-                status: 'OPEN'
+                status: 'OPEN',
+                companyId: req.user.companyId
             }
         });
         res.status(201).json(order);
@@ -72,8 +81,8 @@ router.put('/:id', async (req, res) => {
         const { id } = req.params;
         const { status, description, displacementCost, endDate, paymentMethod, paymentType } = req.body;
 
-        const currentOrder = await prisma.serviceOrder.findUnique({
-            where: { id: Number(id) },
+        const currentOrder = await prisma.serviceOrder.findFirst({
+            where: { id: Number(id), companyId: req.user.companyId },
             include: { transactions: true }
         });
 
@@ -82,7 +91,7 @@ router.put('/:id', async (req, res) => {
         // Lógica de Reabertura (Reopen)
         if (status === 'OPEN' && currentOrder.status !== 'OPEN') {
             const transaction = await prisma.financialTransaction.findFirst({
-                where: { serviceOrderId: Number(id) }
+                where: { serviceOrderId: Number(id), companyId: req.user.companyId }
             });
 
             if (transaction) {
@@ -121,7 +130,7 @@ router.put('/:id', async (req, res) => {
             const total = totalItems + order.displacementCost;
 
             // Verificar se já existe transação para evitar duplicidade
-            const existingTx = await prisma.financialTransaction.findFirst({ where: { serviceOrderId: Number(id) } });
+            const existingTx = await prisma.financialTransaction.findFirst({ where: { serviceOrderId: Number(id), companyId: req.user.companyId } });
 
             if (!existingTx) {
                 let txDescription = `Receita OS #${order.id}`;
@@ -141,7 +150,8 @@ router.put('/:id', async (req, res) => {
                         serviceOrderId: order.id,
                         status: txStatus,
                         dueDate: txDueDate,
-                        paidAt: txPaidAt
+                        paidAt: txPaidAt,
+                        companyId: req.user.companyId
                     }
                 });
             }
@@ -159,6 +169,12 @@ router.post('/:id/items', async (req, res) => {
     try {
         const { id } = req.params;
         const { productId, serviceId, quantity, unitPrice, isFirstHour } = req.body;
+
+        // Verify Order ownership
+        const order = await prisma.serviceOrder.findFirst({
+            where: { id: Number(id), companyId: req.user.companyId }
+        });
+        if (!order) return res.status(404).json({ error: 'OS não encontrada' });
 
         const qty = Number(quantity);
         const price = Number(unitPrice);
@@ -178,10 +194,17 @@ router.post('/:id/items', async (req, res) => {
 
         // Se for produto, abater estoque
         if (productId) {
-            await prisma.product.update({
-                where: { id: Number(productId) },
-                data: { stock: { decrement: qty } }
+            // Verify Product ownership
+            const product = await prisma.product.findFirst({
+                where: { id: Number(productId), companyId: req.user.companyId }
             });
+            
+            if (product) {
+                await prisma.product.update({
+                    where: { id: Number(productId) },
+                    data: { stock: { decrement: qty } }
+                });
+            }
         }
 
         res.status(201).json(item);
@@ -195,9 +218,18 @@ router.post('/:id/items', async (req, res) => {
 router.delete('/items/:itemId', async (req, res) => {
     try {
         const { itemId } = req.params;
-        const item = await prisma.serviceOrderItem.findUnique({ where: { id: Number(itemId) } });
+        
+        // Find item and verify order ownership via nested query
+        const item = await prisma.serviceOrderItem.findUnique({ 
+            where: { id: Number(itemId) },
+            include: { serviceOrder: true }
+        });
 
-        if (item && item.productId) {
+        if (!item || item.serviceOrder.companyId !== req.user.companyId) {
+            return res.status(404).json({ error: 'Item não encontrado' });
+        }
+
+        if (item.productId) {
             // Devolver ao estoque
             await prisma.product.update({
                 where: { id: item.productId },

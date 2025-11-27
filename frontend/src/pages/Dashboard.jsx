@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, FileText, PlusCircle, Calendar } from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const DashboardCard = ({ title, value, icon: Icon, color }) => (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
@@ -32,20 +33,28 @@ const Dashboard = () => {
         };
     });
 
+    const { user } = useAuth();
+    const canViewFinancials = ['OWNER', 'ADMIN'].includes(user?.role);
+
     useEffect(() => {
         fetchDashboardData();
     }, [dateFilter]);
 
     const fetchDashboardData = async () => {
         try {
-            // Buscar resumo financeiro com filtro de data
-            const financialRes = await api.get('/financial/summary', { params: dateFilter });
-
-            // Buscar contagens (simulado por enquanto, ideal seria endpoint específico)
-            const [ordersRes, clientsRes] = await Promise.all([
+            const promises = [
                 api.get('/service-orders'),
                 api.get('/clients')
-            ]);
+            ];
+
+            if (canViewFinancials) {
+                promises.push(api.get('/financial/summary', { params: dateFilter }));
+            }
+
+            const results = await Promise.all(promises);
+            const ordersRes = results[0];
+            const clientsRes = results[1];
+            const financialRes = canViewFinancials ? results[2] : null;
 
             const openOrders = ordersRes.data.filter(o => o.status === 'OPEN').length;
             const activeClients = clientsRes.data.length;
@@ -53,7 +62,7 @@ const Dashboard = () => {
             setStats({
                 openOrders,
                 activeClients,
-                monthlyRevenue: financialRes.data.income
+                monthlyRevenue: financialRes ? financialRes.data.income : 0
             });
         } catch (error) {
             console.error('Erro ao buscar dados do dashboard:', error);
@@ -96,12 +105,14 @@ const Dashboard = () => {
                     icon={Users}
                     color="bg-green-500"
                 />
-                <DashboardCard
-                    title="Faturamento (Período)"
-                    value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.monthlyRevenue)}
-                    icon={FileText}
-                    color="bg-purple-500"
-                />
+                {canViewFinancials && (
+                    <DashboardCard
+                        title="Faturamento (Período)"
+                        value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.monthlyRevenue)}
+                        icon={FileText}
+                        color="bg-purple-500"
+                    />
+                )}
             </div>
 
             <div className="mt-8">

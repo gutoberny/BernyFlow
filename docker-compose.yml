@@ -8,25 +8,26 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgrespassword
       POSTGRES_DB: vberny
-    # Ports are exposed directly on host
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
-    network_mode: host
 
   backend:
     build: ./backend
     container_name: vberny_backend
     environment:
-      # In host mode, we use localhost to talk to other services
-      - DATABASE_URL=postgresql://postgres:postgrespassword@localhost:5432/vberny?schema=public
+      # Use service name 'postgres' instead of localhost
+      - DATABASE_URL=postgresql://postgres:postgrespassword@postgres:5432/vberny?schema=public
       - PORT=3000
     depends_on:
       - postgres
+    ports:
+      - "3000:3000"
     volumes:
       - ./backend:/app
       - /app/node_modules
-    network_mode: host
 
   frontend:
     build: ./frontend
@@ -35,10 +36,11 @@ services:
       - VITE_API_URL=http://localhost:3000
     depends_on:
       - backend
+    ports:
+      - "5173:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    network_mode: host
 
 volumes:
   postgres_data:

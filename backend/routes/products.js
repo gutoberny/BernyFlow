@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 router.get('/', async (req, res) => {
     try {
         const products = await prisma.product.findMany({
+            where: { companyId: req.user.companyId },
             orderBy: { name: 'asc' }
         });
         res.json(products);
@@ -28,7 +29,8 @@ router.post('/', async (req, res) => {
                 costPrice: Number(costPrice || 0),
                 freight: Number(freight || 0),
                 otherCosts: Number(otherCosts || 0),
-                profitMargin: Number(profitMargin || 0)
+                profitMargin: Number(profitMargin || 0),
+                companyId: req.user.companyId
             }
         });
         res.status(201).json(product);
@@ -42,6 +44,14 @@ router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { name, description, price, stock, costPrice, freight, otherCosts, profitMargin } = req.body;
+
+        // Verify ownership
+        const existing = await prisma.product.findFirst({
+            where: { id: Number(id), companyId: req.user.companyId }
+        });
+
+        if (!existing) return res.status(404).json({ error: 'Produto não encontrado' });
+
         const product = await prisma.product.update({
             where: { id: Number(id) },
             data: {
@@ -65,6 +75,14 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
+
+        // Verify ownership
+        const existing = await prisma.product.findFirst({
+            where: { id: Number(id), companyId: req.user.companyId }
+        });
+
+        if (!existing) return res.status(404).json({ error: 'Produto não encontrado' });
+
         await prisma.product.delete({
             where: { id: Number(id) }
         });
